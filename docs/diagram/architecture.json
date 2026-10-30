@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "lockframe architecture",
+    "output": "architecture.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "Browser",
+      "sublabel": "React, hls.js",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API",
+      "sublabel": "Fastify, Socket.io",
+      "pos": [
+        330,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "keys",
+      "type": "security",
+      "label": "Key route",
+      "sublabel": "token, access, lease",
+      "pos": [
+        330,
+        110
+      ],
+      "size": [
+        150,
+        64
+      ],
+      "tag": "AES-128"
+    },
+    {
+      "id": "redis",
+      "type": "messagebus",
+      "label": "Redis",
+      "sublabel": "queues, lease, pub/sub",
+      "pos": [
+        620,
+        110
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "mongo",
+      "type": "database",
+      "label": "MongoDB",
+      "sublabel": "records, keys, events",
+      "pos": [
+        620,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "workers",
+      "type": "backend",
+      "label": "Workers",
+      "sublabel": "ffmpeg, transcript",
+      "pos": [
+        910,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "cloud",
+      "label": "S3 storage",
+      "sublabel": "raw upload, encrypted HLS",
+      "pos": [
+        620,
+        490
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "groq",
+      "type": "external",
+      "label": "Groq",
+      "sublabel": "speech to text, LLM",
+      "pos": [
+        1190,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "browser-api",
+      "from": "browser",
+      "to": "api",
+      "label": "REST, cookie",
+      "variant": "emphasis"
+    },
+    {
+      "id": "browser-keys",
+      "from": "browser",
+      "to": "keys",
+      "label": "key + token",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "keys-redis",
+      "from": "keys",
+      "to": "redis",
+      "label": "device lease",
+      "variant": "security"
+    },
+    {
+      "id": "api-mongo",
+      "from": "api",
+      "to": "mongo",
+      "label": "records"
+    },
+    {
+      "id": "api-redis",
+      "from": "api",
+      "to": "redis",
+      "label": "enqueue",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "route": "auto"
+    },
+    {
+      "id": "redis-workers",
+      "from": "redis",
+      "to": "workers",
+      "label": "jobs",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "id": "workers-mongo",
+      "from": "workers",
+      "to": "mongo",
+      "label": "status, keys"
+    },
+    {
+      "id": "api-s3",
+      "from": "api",
+      "to": "s3",
+      "label": "presign, serve",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "workers-s3",
+      "from": "workers",
+      "to": "s3",
+      "label": "encrypted segments",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "workers-groq",
+      "from": "workers",
+      "to": "groq",
+      "label": "audio, prompts",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Upload and process",
+      "items": [
+        "Parts go straight to S3 with a signed checksum",
+        "probe, encode and finalize run as queue jobs",
+        "A killed worker's job is taken over by another"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Playback",
+      "items": [
+        "Segments are encrypted before they reach storage",
+        "Keys rotate every 30 s and only the key route hands them out",
+        "One device holds the playback slot, others are refused"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Understanding and flags",
+      "items": [
+        "Transcript, chapters and search run after the video is ready",
+        "Answers cite the moment they came from",
+        "Rules flag odd playback for the owner"
+      ]
+    }
+  ]
+}

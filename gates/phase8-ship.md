@@ -23,8 +23,8 @@ Not mine to do: creating accounts and secrets on hosts, and pushing to GitHub. T
   EXPECT: /Tests\s+\d+ passed/
   EVIDENCE: typecheck 0 errors; fast suite 167 passed (162 + 5 new); integration 33 passed on 2026-10-30 after the changes; all processes stopped by pid
 
-- [ ] G7: the CI run is green on GitHub (needs the user to push)
-  EVIDENCE: pending
+- [x] G7: the CI run is green on GitHub (needs the user to push)
+  EVIDENCE: run 41126506942 on commit 8859df7, https://github.com/amitkhairwal/lockframe/actions/runs/41126506942 : job test success (typecheck, 170 tests), job stack success (compose build, up, /healthz, scripts/smoke.ts). Took four runs: the first three failed because mongo:8 refuses to start on the runner kernel (6.19+, SERVER-121912); compose now uses mongo:7 and gates api and worker on healthy mongo and redis
 
 - [ ] G8: deployed, one live link, smoke script passes against it (needs the user's host accounts)
   EVIDENCE: pending

@@ -18,7 +18,7 @@ Stack: TypeScript on Node 22, Fastify, MongoDB, BullMQ on Redis, S3 API, ffmpeg,
 
 ## Run it
 
-You need Node 22, ffmpeg and ffprobe on PATH, MongoDB, Redis and an S3 compatible server. `docker compose up` also starts the whole stack (see `docs/DEPLOY.md`; not run locally, CI runs it).
+You need Node 22, ffmpeg and ffprobe on PATH, MongoDB, Redis and an S3 compatible server. `docker compose up` also starts the whole stack (see `docs/DEPLOY.md`). It is not run on this machine, but CI builds it, starts it and runs the smoke test against it on every push.
 
 ```
 npm install
@@ -67,7 +67,7 @@ Test counts above come from the last full run on 2026-10-30.
 
 - **This is not DRM.** Screen recording works, and the watermark is a page element that can be removed. A script holding a valid token can fetch the keys of a video it may watch.
 - **Search and answer quality is not measured.** Everything in phase 5 ran against a fake provider. The hit rate needs a real speech video, a Groq key and questions written before looking at answers (`docs/EVAL.md`). No quality number is claimed.
-- **Not deployed.** Docker files and a CI workflow are written but have not run yet (this machine has no Docker). No live link yet. See `docs/DEPLOY.md`.
+- **Not deployed.** CI is green on GitHub, including the Docker stack and the smoke test, but there is no live link yet. See `docs/DEPLOY.md`.
 - **One API process only** was tested. Rate limits live in memory.
 - **Flag thresholds are guesses** and have not seen real traffic.
 - **Safari's native HLS** is not supported and not tested.

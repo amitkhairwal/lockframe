@@ -36,7 +36,9 @@ jobs:
             curl -fsS http://localhost:3000/healthz && exit 0
             sleep 2
           done
-          docker compose logs
+          docker compose ps -a
+          # one annotation with the tail of each service log, readable on the run page without opening the job
+          echo "::error title=compose logs::$(docker compose logs --no-color --tail=40 api setup worker s3 2>&1 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')"
           exit 1
       - name: smoke test
         run: npx tsx scripts/smoke.ts

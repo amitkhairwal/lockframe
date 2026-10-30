@@ -5,7 +5,8 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # pinned: MongoDB 8 refuses to start on kernel 6.19+, which newer runner images ship (SERVER-121912)
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,7 +19,8 @@ jobs:
       - run: npm test
 
   stack:
-    runs-on: ubuntu-latest
+    # pinned: MongoDB 8 refuses to start on kernel 6.19+, which newer runner images ship (SERVER-121912)
+    runs-on: ubuntu-24.04
     needs: test
     steps:
       - uses: actions/checkout@v4

@@ -15,7 +15,9 @@ x-env: &env
 
 services:
   mongo:
-    image: mongo:8
+    # 7, not 8: MongoDB 8 refuses to start on Linux kernels 6.19 to 7.0.13 (SERVER-121912),
+    # which current CI runners ship. The app needs nothing from 8. Atlas in production is not affected.
+    image: mongo:7
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 3s

@@ -99,7 +99,7 @@ export function pipeline(deps: Deps) {
         throw err
       }
 
-      const ladder = pickLadder(source.height)
+      const ladder = pickLadder(Math.min(source.height, config.media.maxHeight))
       const renditions = ladder.map((r) => ({ height: r.height, width: rungWidth(source, r.height), progress: 0 }))
       const updated = await videos.findOneAndUpdate(
         { _id: videoId, run },

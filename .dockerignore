@@ -4,3 +4,4 @@ apps/web/dist
 .git
 *.log
 graphify-out
+.env.*

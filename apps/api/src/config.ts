@@ -57,6 +57,7 @@ export const config = {
     threads: nonNegative('FFMPEG_THREADS', 0), // 0 lets ffmpeg decide
     tmpDir: process.env.TMP_DIR ?? tmpdir(),
     maxDurationSeconds: num('MAX_DURATION_SECONDS', 7200),
+    maxHeight: num('MAX_HEIGHT', 1080), // tallest rung; lower it on a small host to save memory and time
   },
   worker: {
     encodeConcurrency: num('ENCODE_CONCURRENCY', 1),

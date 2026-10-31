@@ -4,3 +4,4 @@ node_modules
 dist
 graphify-out
 *.pid
+.env.*

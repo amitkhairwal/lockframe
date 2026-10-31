@@ -50,8 +50,10 @@ function startProxy() {
   )
 }
 
-const proxy = await startProxy()
-process.env.S3_PUBLIC_ENDPOINT = `http://127.0.0.1:${proxy.port}`
+// a plain TCP proxy only works for an http endpoint (local SeaweedFS). A hosted https one routes by Host and needs TLS,
+// so there the first run is cut by aborting the upload part way instead.
+const proxy = target.protocol === 'http:' ? await startProxy() : undefined
+if (proxy) process.env.S3_PUBLIC_ENDPOINT = `http://127.0.0.1:${proxy.port}`
 process.env.PART_BYTES ??= String(8 * MiB)
 process.env.MAX_UPLOAD_BYTES ??= String(20 * 1024 * MiB)
 process.env.NODE_ENV = 'test'
@@ -132,17 +134,22 @@ function check(ok: boolean, msg: string) {
 }
 
 // run 1: cut part way through
-proxy.state.cutAfter = total * 0.6 // after the first wave of parts finished, in the middle of the second
+const cutAt = total * 0.6 // after the first wave of parts finished, in the middle of the second
+const cut = new AbortController()
+let sentBeforeCut = 0
+if (proxy) proxy.state.cutAfter = cutAt
 let firstRunFailed = false
-await upload(blob, { api, headers, store: kv, retries: 0, concurrency: 4 }).catch(() => (firstRunFailed = true))
+await upload(blob, {
+  api, headers, store: kv, retries: 0, concurrency: 4, signal: cut.signal,
+  onProgress: (done) => ((sentBeforeCut = done), !proxy && done >= cutAt && cut.abort()),
+}).catch(() => (firstRunFailed = true))
 check(firstRunFailed, 'first run died when the connection was cut')
-const sentBeforeCut = proxy.state.up
+if (proxy) sentBeforeCut = proxy.state.up
 
 // run 2: network is back
-proxy.state.up = 0
-proxy.state.cutAfter = Infinity
+if (proxy) (proxy.state.up = 0), (proxy.state.cutAfter = Infinity)
 const r = await upload(blob, { api, headers, store: kv })
-const bytesOnWire = proxy.state.up
+const bytesOnWire = proxy ? proxy.state.up : r.bytesSent
 const doc = await col.findOne({ _id: r.id })
 check(r.partsSkipped > 0, `resume skipped ${r.partsSkipped} parts that were already stored`)
 check(r.bytesSent < total, 'resume did not send the whole file again')
@@ -166,5 +173,5 @@ await rm(file.path, { force: true })
 await app.close()
 await mongo.close()
 await memory?.stop()
-proxy.close()
+proxy?.close()
 process.exit(failed ? 1 : 0)

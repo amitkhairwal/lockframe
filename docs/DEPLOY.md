@@ -1,16 +1,18 @@
 # Deploying
 
-One deployment, one live link. The API also serves the built player, so the link is the API's address. Nothing here has been deployed yet; every host claim below is marked as checked or not.
+One deployment, one live link. The API also serves the built player, so the link is the API's address. Every host claim below is marked as checked or not.
+
+The chosen setup: Render (one free web service running API and worker together), MongoDB Atlas M0, Redis Cloud free (30 MB), Backblaze B2. Card-free hosts that give a separate always-on worker were not found (checked 2026-10-31: Render free has no background workers, Hugging Face Docker Spaces now need a paid plan).
 
 ## What runs where
 
 | Part | Needs | Notes |
 |---|---|---|
 | API and player | Node 22, the `Dockerfile` | `npm start`. Serves `/api`, `/media`, `/socket.io` and the player. Needs ffmpeg only if it also runs jobs, which it does not. |
-| Worker | the same image, `npm run worker`, ffmpeg | CPU heavy. A free web host is slow at ffmpeg, so run the worker on your own machine against the hosted Redis, Mongo and storage. That also works as a scaling demo. |
+| Worker | the same image, `npm run worker`, ffmpeg | CPU heavy. On a host with one free web service, run both with `bash scripts/start-all.sh`: if either process exits, the other is stopped too so the host restarts the container. Measured locally against Atlas, Redis Cloud and B2: about 265 MB idle for both, 405 MB peak while encoding the 6 s smoke clip. A worker on your own machine against the same hosted services also works. |
 | MongoDB | any 6+ server | Atlas M0 (512 MB) is enough for a few videos. Not checked: whether it needs a card. |
 | Redis | any 7 server, no per-command billing | BullMQ polls, so a host that bills per command can burn its quota fast. The device lease lives here too. |
-| S3 storage | S3 API with CORS, presigned PUT, multipart, and per-part SHA-256 | Hosts differ on checksums, CORS and lifecycle. Run `scripts/upload-check.ts` and `scripts/smoke.ts` against the host you pick before trusting it. Cloudflare R2 may ask for a payment method (not checked); Backblaze B2 and Supabase Storage speak S3 (not checked). |
+| S3 storage | S3 API with CORS, presigned PUT, multipart, and per-part SHA-256 | Backblaze B2 checked: `upload-check` passes 8 of 8 (wrong bytes refused, resume after a cut, sha256 match, delete leaves nothing) and `smoke` passes. Use an application key scoped to the bucket with read and write; it cannot create buckets, so create the bucket in the B2 console first. Cloudflare R2 may ask for a payment method (not checked). |
 
 ## Settings for production
 
@@ -27,6 +29,7 @@ One deployment, one live link. The API also serves the built player, so the link
 | `HLS_BASE_URL`, `KEY_URL_BASE` | leave unset for a small demo: segments then go through the API's `/media` route, which uses the API host's bandwidth. For real traffic, serve `hls/` from a public bucket or CDN, set `HLS_BASE_URL` to it, and set `KEY_URL_BASE` to the API's origin. `KEY_URL_BASE` is baked into playlists when a video is encoded, so set it before uploading. |
 | `GROQ_API_KEY` | optional. Turns on transcripts, search and questions. |
 | `MAX_DURATION_SECONDS`, `MAX_UPLOAD_BYTES` | cap the demo (clip length and size) so a free host is not overwhelmed |
+| `MAX_HEIGHT`, `FFMPEG_THREADS` | tallest rung of the ladder (default 1080) and ffmpeg threads. On a 512 MB instance use 480 and 1. |
 
 Worker machine: the same `MONGODB_URI`, `REDIS_URL`, `S3_*`, `KEY_ROTATE_SEGMENTS` and `KEY_URL_BASE` as the API, plus ffmpeg.
 

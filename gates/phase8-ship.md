@@ -26,5 +26,5 @@ Not mine to do: creating accounts and secrets on hosts, and pushing to GitHub. T
 - [x] G7: the CI run is green on GitHub (needs the user to push)
   EVIDENCE: run 41126506942 on commit 8859df7, https://github.com/amitkhairwal/lockframe/actions/runs/41126506942 : job test success (typecheck, 170 tests), job stack success (compose build, up, /healthz, scripts/smoke.ts). Took four runs: the first three failed because mongo:8 refuses to start on the runner kernel (6.19+, SERVER-121912); compose now uses mongo:7 and gates api and worker on healthy mongo and redis
 
-- [ ] G8: deployed, one live link, smoke script passes against it (needs the user's host accounts)
-  EVIDENCE: pending
+- [x] G8: deployed, one live link, smoke script passes against it (needs the user's host accounts)
+  EVIDENCE: https://lockframe.onrender.com on 2026-11-01. Render free web service (Singapore) running API and worker via scripts/start-all.sh, MongoDB Atlas M0 (Mumbai), Redis Cloud free (Mumbai), Backblaze B2 (us-east-005). `BASE=https://lockframe.onrender.com npx tsx scripts/smoke.ts`: 14 of 14 PASS in 50 s, including upload, encode on the host, encrypted playback, key refused without a token, stranger refused. /healthz 200 in about 0.45 s when warm. Cold start after the 15 minute idle spin-down not measured yet.
